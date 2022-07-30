@@ -43,3 +43,25 @@ class AlexNet(nn.Module):
         
         x = self.classifier(x)
         return x
+
+def prediction(image):
+    PATH = "melanoma_CNN.pt"
+
+    model = torch.load(PATH, map_location=torch.device('cpu'))
+    model.eval()
+
+    transform = transforms.Compose([
+    transforms.Resize((227, 227)),
+    transforms.ToTensor(),
+    transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])
+
+    classes = ['Benign', 'Malignant']
+
+    batch_t = torch.unsqueeze(transform(image), 0)
+    output = model(batch_t)
+
+    ps = torch.exp(output)
+    _, pred = torch.max(ps,1)
+    prob = torch.nn.functional.softmax(output, dim=1)
+    prediction = torch.max(prob, 1)
+    return classes[pred[0]], prediction[0].item()*100
